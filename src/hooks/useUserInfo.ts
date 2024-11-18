@@ -1,25 +1,37 @@
 import { create } from "zustand";
+import { Video } from "./useVideo";
 
 export interface UserInfoState {
   userInfo: UserInfo | null;
-  setUserInfo: (UserInfo: UserInfo) => void;
+  setUserInfo: (UserInfo: UserInfo | null) => void;
+
   followers: UserInfo[];
   setFollowers: (followers: UserInfo[]) => void;
   addFollowers: (followers: UserInfo) => void;
   removeFollowers: (followerId: string) => void;
+
+  followings: UserInfo[];
+  setFollowings: (followings: UserInfo[]) => void;
+  addFollowings: (followings: UserInfo) => void;
+  removeFollowings: (followingId: string) => void;
+
   strangeUsers: StrangeUserInfo[];
   setStrangeUsers: (strangeUsers: StrangeUserInfo[]) => void;
   addStrangeUser: (strangeUser: StrangeUserInfo) => void;
   removeStrangeUser: (strangeUserId: string) => void;
+
+  myVideos: Video[];
+  setMyVideos: (videos: Video[]) => void;
+  addMyVideos: (video: Video) => void;
+  removeMyVideos: (videoId: string) => void;
 }
 
 export interface UserInfo {
-  _id: string;
-  fullname: string;
+  id: string;
+  full_name: string;
   username: string;
-  email: string;
-  avatar_url: string;
-  bio: string;
+  avatar_url?: string;
+  bio?: string;
 }
 
 export type FollowRequest = {
@@ -34,7 +46,7 @@ export type StrangeUserInfo = UserInfo & {
 
 const useUserInfo = create<UserInfoState>((set) => ({
   userInfo: null,
-  setUserInfo: (userInfo: UserInfo) => set({ userInfo }),
+  setUserInfo: (userInfo: UserInfo | null) => set({ userInfo }),
 
   followers: [],
   setFollowers: (followers: UserInfo[]) => set({ followers }),
@@ -42,12 +54,23 @@ const useUserInfo = create<UserInfoState>((set) => ({
     set((state) => ({
       followers: [...state.followers, follower],
       strangeUsers: state.strangeUsers.filter(
-        (item) => item._id !== follower._id
+        (item) => item.id !== follower.id
       ),
     })),
-  removeFollowers: (friendId: string) =>
+  removeFollowers: (userId: string) =>
     set((state) => ({
-      followers: state.followers.filter((item) => item._id !== friendId),
+      followers: state.followers.filter((item) => item.id !== userId),
+    })),
+
+  followings: [],
+  setFollowings: (followings: UserInfo[]) => set({ followings }),
+  addFollowings: (following: UserInfo) =>
+    set((state) => ({
+      followings: [...state.followings, following],
+    })),
+  removeFollowings: (userId: string) =>
+    set((state) => ({
+      followings: state.followings.filter((item) => item.id !== userId),
     })),
 
   strangeUsers: [],
@@ -59,8 +82,19 @@ const useUserInfo = create<UserInfoState>((set) => ({
   removeStrangeUser: (strangeUserId: string) =>
     set((state) => ({
       strangeUsers: state.strangeUsers.filter(
-        (item) => item._id !== strangeUserId
+        (item) => item.id !== strangeUserId
       ),
+    })),
+
+  myVideos: [],
+  setMyVideos: (videos: Video[]) => set({ myVideos: videos }),
+  addMyVideos: (video: Video) =>
+    set((state) => ({
+      myVideos: [...state.myVideos, video],
+    })),
+  removeMyVideos: (videoId: string) =>
+    set((state) => ({
+      myVideos: state.myVideos.filter((item) => item.id !== videoId),
     })),
 }));
 

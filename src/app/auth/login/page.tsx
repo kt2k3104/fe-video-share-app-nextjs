@@ -14,7 +14,7 @@ import useUserInfo, { UserInfoState } from "@/hooks/useUserInfo";
 import requestApi from "@/utils/api";
 import { Box, Button, HStack, Input, Text, VStack } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 
 type Inputs = {
@@ -28,7 +28,12 @@ function Login() {
   const [open, setOpen] = useState(false);
 
   const setUserInfo = useUserInfo((state: UserInfoState) => state.setUserInfo);
-  const setFollower = useUserInfo((state: UserInfoState) => state.setFollowers);
+  const setFollowers = useUserInfo(
+    (state: UserInfoState) => state.setFollowers
+  );
+  const setFollowings = useUserInfo(
+    (state: UserInfoState) => state.setFollowings
+  );
   const setStrangeUsers = useUserInfo(
     (state: UserInfoState) => state.setStrangeUsers
   );
@@ -55,16 +60,26 @@ function Login() {
         localStorage.setItem("refreshToken", responseData.data.refresh_token);
 
         const { data: usersData } = await requestApi("users/me", "GET", null);
+        console.log(usersData.data.user);
         setUserInfo({
-          _id: usersData.id,
-          fullname: usersData.fullname,
-          username: usersData.username,
-          email: usersData.email,
-          avatar_url: usersData.avatar,
-          bio: usersData.bio,
+          id: usersData.data.user.id,
+          full_name: usersData.data.user.full_name,
+          username: usersData.data.user.username,
+          avatar_url: usersData.data.user.avatar_url,
+          bio: usersData.data.user.bio,
         });
-        setFollower(usersData.follower);
-        setStrangeUsers(usersData.strangers);
+        const { data: followersData } = await requestApi(
+          "users/me/followers",
+          "GET",
+          null
+        );
+        setFollowers(followersData.data.followers);
+        const { data: followingsData } = await requestApi(
+          "users/me/followings",
+          "GET",
+          null
+        );
+        setFollowings(followingsData.data.followings);
         setOpen(true);
       }
     } catch (error: any) {
@@ -93,8 +108,12 @@ function Login() {
     }
   };
 
+  useEffect(() => {
+    document.title = "Login";
+  }, []);
+
   return (
-    <VStack w={"100vw"} h={"100vh"} p={"0"} m={"0"} justifyContent={"center"}>
+    <VStack w={"100%"} h={"100%"} p={"0"} m={"0"} justifyContent={"center"}>
       <Toaster />
       <Box w={"500px"} h={"500px"}>
         <Text fontSize={"24px"} textAlign={"center"} mb={"50px"}>

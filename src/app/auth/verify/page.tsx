@@ -6,19 +6,23 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 
 function Verify() {
+  useEffect(() => {
+    document.title = "Verify";
+  }, []);
+
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const user_id = searchParams.get("user_id");
+  const userid = searchParams.get("userid");
   const token = searchParams.get("token");
 
   useEffect(() => {
-    if (user_id && token) {
+    if (userid && token) {
       // Call api to verify user
       const callAPI = async () => {
         try {
           await requestApi("auth/verify", "POST", {
-            user_id,
+            userid,
             token,
           });
         } catch (error) {
@@ -28,7 +32,7 @@ function Verify() {
 
       callAPI();
     }
-  }, [user_id, token]);
+  }, [userid, token]);
 
   return (
     <VStack w={"100vw"} h={"100vh"} m={"0"} p={"0"} justifyContent={"center"}>

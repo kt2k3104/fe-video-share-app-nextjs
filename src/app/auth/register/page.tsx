@@ -22,6 +22,7 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import axios from "axios";
+import { Metadata } from "next";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
@@ -34,6 +35,10 @@ type Inputs = {
 };
 
 function Register() {
+  useEffect(() => {
+    document.title = "Register";
+  }, []);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");

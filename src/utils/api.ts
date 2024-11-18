@@ -26,7 +26,7 @@ export default function requestApi(
       const accessToken = localStorage.getItem("accessToken");
       if (accessToken) {
         config.headers["Authorization"] = `Bearer ${accessToken}`;
-        config.headers["x-client-id"] = localStorage.getItem("userId");
+        // config.headers["x-client-id"] = localStorage.getItem("userId");
       }
       return config;
     },
