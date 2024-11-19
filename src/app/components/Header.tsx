@@ -86,7 +86,13 @@ function Header() {
           </Icon>
           <MenuRoot>
             <MenuTrigger asChild>
-              <Button variant="outline" size="md" borderRadius={"999px"}>
+              <Button
+                variant="outline"
+                size="md"
+                borderRadius={"50%"}
+                w={"30px"}
+                h={"30px"}
+              >
                 <Avatar
                   size="md"
                   name="User"
@@ -115,7 +121,7 @@ function Header() {
                           },
                         }
                       );
-                      router.push("/");
+                      window.location.href = "/";
                       localStorage.removeItem("token");
                       setMyInfo(null);
                       setFollower([]);

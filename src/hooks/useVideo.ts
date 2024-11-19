@@ -18,7 +18,8 @@ const useVideo = create<VideoState>((set) => ({
 export default useVideo;
 
 export interface Video {
-  id: string;
+  id: number;
+  user_id: number;
   title: string;
   description: string;
   url: string;
@@ -26,4 +27,12 @@ export interface Video {
   likes_count: number;
   comments_count: number;
   views_count: number;
+  public_id: string;
+  user: {
+    id: number;
+    avatar_url: string;
+    username: string;
+  };
+  created_at: string;
+  updated_at: string;
 }

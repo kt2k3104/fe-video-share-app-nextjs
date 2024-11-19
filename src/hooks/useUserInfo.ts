@@ -20,9 +20,9 @@ export interface UserInfoState {
   addStrangeUser: (strangeUser: StrangeUserInfo) => void;
   removeStrangeUser: (strangeUserId: string) => void;
 
-  myVideos: Video[];
-  setMyVideos: (videos: Video[]) => void;
-  addMyVideos: (video: Video) => void;
+  myVideos: MyVideo[];
+  setMyVideos: (videos: MyVideo[]) => void;
+  addMyVideos: (video: MyVideo) => void;
   removeMyVideos: (videoId: string) => void;
 }
 
@@ -39,6 +39,18 @@ export type FollowRequest = {
   message: string;
   createdAt: string;
 };
+
+export interface MyVideo {
+  id: number;
+  title: string;
+  description: string;
+  url: string;
+  thumbnail_url: string;
+  likes_count: number;
+  comments_count: number;
+  views_count: number;
+  created_at: string;
+}
 
 export type StrangeUserInfo = UserInfo & {
   mutualFriends: UserInfo[];
@@ -87,14 +99,14 @@ const useUserInfo = create<UserInfoState>((set) => ({
     })),
 
   myVideos: [],
-  setMyVideos: (videos: Video[]) => set({ myVideos: videos }),
-  addMyVideos: (video: Video) =>
+  setMyVideos: (videos: MyVideo[]) => set({ myVideos: videos }),
+  addMyVideos: (video: MyVideo) =>
     set((state) => ({
       myVideos: [...state.myVideos, video],
     })),
   removeMyVideos: (videoId: string) =>
     set((state) => ({
-      myVideos: state.myVideos.filter((item) => item.id !== videoId),
+      myVideos: state.myVideos.filter((item) => +item.id !== +videoId),
     })),
 }));
 

@@ -113,7 +113,6 @@ function Register() {
             placeholder="Username"
             {...register("username", {
               required: true,
-              pattern: /^[A-Za-z]+$/i,
             })}
           />
           <Input

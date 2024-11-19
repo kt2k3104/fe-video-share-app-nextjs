@@ -1,107 +1,131 @@
 "use client";
-import { Box, Text, VStack } from "@chakra-ui/react";
+
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { VStack } from "@chakra-ui/react";
+import axios from "axios";
 import VideoBox from "./components/VideoBox";
+import useVideo, { Video, VideoState } from "@/hooks/useVideo";
 
 export default function Home() {
-  // const containerRef = useRef(null);
-  // const videoRefs = useRef([]); // Mảng ref chứa từng video
-  // const [currentIndex, setCurrentIndex] = useState(0); // Vị trí video hiện tại
-  // const [videoHeight, setVideoHeight] = useState(0); // Chiều cao thực tế của video
-  // const isScrollingRef = useRef(false); // Cờ trạng thái kiểm soát cuộn
-  // const [volume, setVolume] = useState(1); // Lưu âm lượng chung cho tất cả video
+  const pathname = usePathname(); // Theo dõi route hiện tại
+  const videos = useVideo((state: VideoState) => state.videos);
+  const setVideos = useVideo((state: VideoState) => state.setVideos);
 
-  // // Cập nhật chiều cao video mỗi khi thay đổi kích thước màn hình
-  // useEffect(() => {
-  //   const updateVideoHeight = () => {
-  //     setVideoHeight(window.innerHeight - 102); // 100vh - header/padding
-  //   };
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const videoRefs = useRef<HTMLVideoElement[]>([]); // Mảng ref chứa từng video
+  const [currentIndex, setCurrentIndex] = useState(0); // Vị trí video hiện tại
+  const [videoHeight, setVideoHeight] = useState(window.innerHeight - 102); // Chiều cao video
+  const [volume, setVolume] = useState(1); // Âm lượng lưu trữ
+  const isScrollingRef = useRef(false); // Cờ trạng thái cuộn
+  const [isLoading, setIsLoading] = useState(true); // Trạng thái chờ dữ liệu từ API
 
-  //   updateVideoHeight(); // Cập nhật ngay lần đầu
-  //   window.addEventListener("resize", updateVideoHeight); // Lắng nghe thay đổi kích thước
-  //   return () => window.removeEventListener("resize", updateVideoHeight);
-  // }, []);
+  // Cập nhật chiều cao video khi thay đổi kích thước màn hình
+  useEffect(() => {
+    const handleResize = () => setVideoHeight(window.innerHeight - 102);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
-  // const handleScroll = (e: any) => {
-  //   e.preventDefault();
+  // Lấy danh sách video từ API và đánh dấu dữ liệu đã sẵn sàng
+  useEffect(() => {
+    const fetchVideos = async () => {
+      try {
+        const res = await axios.get(
+          "http://localhost:9000/api/v1/videos?page=1&limit=20"
+        );
+        setVideos(res.data.data);
+        setIsLoading(false); // Dữ liệu đã sẵn sàng
+      } catch (error) {
+        console.error("Lỗi khi lấy video:", error);
+      }
+    };
 
-  //   if (isScrollingRef.current) return; // Nếu đang cuộn, bỏ qua sự kiện mới
+    if (videos.length === 0) {
+      setIsLoading(true); // Đặt trạng thái chờ
+      fetchVideos();
+    } else {
+      setIsLoading(false); // Nếu đã có dữ liệu, bỏ qua tải
+    }
+  }, [setVideos, videos]);
 
-  //   const container: any = containerRef.current;
-  //   const totalVideos = container.children.length;
+  // Phục hồi âm lượng từ localStorage
+  useEffect(() => {
+    const savedVolume = localStorage.getItem("videoVolume");
+    if (savedVolume) setVolume(parseFloat(savedVolume));
+  }, []);
 
-  //   if (e.deltaY > 0 && currentIndex < totalVideos - 1) {
-  //     // Cuộn xuống
-  //     setCurrentIndex((prev) => prev + 1);
-  //   } else if (e.deltaY < 0 && currentIndex > 0) {
-  //     // Cuộn lên
-  //     setCurrentIndex((prev) => prev - 1);
-  //   }
+  // Reset trạng thái `currentIndex` khi pathname thay đổi
+  useEffect(() => {
+    setCurrentIndex(0); // Mỗi khi route thay đổi, reset về video đầu tiên
+  }, [pathname]);
 
-  //   // Đặt cờ trạng thái để ngăn cuộn nhiều lần liên tiếp
-  //   isScrollingRef.current = true;
-  //   setTimeout(() => {
-  //     isScrollingRef.current = false; // Reset cờ sau 300ms
-  //   }, 300);
-  // };
+  // Phát video đầu tiên sau khi videos đã được tải
+  useEffect(() => {
+    if (!isLoading && videos.length > 0) {
+      const firstVideo = videoRefs.current[0];
+      if (firstVideo) {
+        firstVideo.volume = volume; // Áp dụng âm lượng
+        firstVideo.muted = false; // Đảm bảo bật âm thanh
+        firstVideo
+          .play()
+          .catch((err) => console.error("Video không thể phát:", err));
+      }
+    }
+  }, [isLoading, videos, volume]);
 
-  // const handleVolumeChange = (e: any) => {
-  //   const newVolume = e.target.volume;
-  //   setVolume(newVolume);
+  // Điều khiển phát/dừng video khi thay đổi `currentIndex`
+  useEffect(() => {
+    if (!isLoading && videos.length > 0) {
+      videoRefs.current.forEach((video, index) => {
+        if (video) {
+          if (index === currentIndex) {
+            video.volume = volume; // Áp dụng âm lượng
+            video.muted = false; // Đảm bảo bật âm thanh
+            video
+              .play()
+              .catch((err) => console.error("Video không thể phát:", err));
+          } else {
+            video.pause();
+            video.currentTime = 0; // Đặt lại thời gian video
+          }
+        }
+      });
 
-  //   // Lưu âm lượng vào localStorage để các video khác có thể dùng
-  //   localStorage.setItem("videoVolume", newVolume);
-  // };
+      // Cuộn tới video hiện tại
+      if (containerRef.current) {
+        containerRef.current.scrollTo({
+          top: currentIndex * videoHeight,
+          behavior: "smooth",
+        });
+      }
+    }
+  }, [currentIndex, videoHeight, volume, isLoading, videos]);
 
-  // useEffect(() => {
-  //   const container: any = containerRef.current;
+  // Xử lý cuộn chuột để thay đổi video
+  const handleScroll = (e: React.WheelEvent) => {
+    if (isScrollingRef.current) return; // Ngăn chặn cuộn liên tục
 
-  //   if (container) {
-  //     container.style.scrollBehavior = "smooth";
-  //     container.scrollTo({
-  //       top: currentIndex * videoHeight, // Cuộn theo chiều cao thực tế
-  //       behavior: "smooth",
-  //     });
-  //   }
+    if (e.deltaY > 0 && currentIndex < videos.length - 1) {
+      setCurrentIndex((prev) => prev + 1); // Cuộn xuống
+    } else if (e.deltaY < 0 && currentIndex > 0) {
+      setCurrentIndex((prev) => prev - 1); // Cuộn lên
+    }
 
-  //   // Điều khiển video chạy/dừng
-  //   videoRefs.current.forEach((video: any, index) => {
-  //     if (video) {
-  //       if (index === currentIndex) {
-  //         video.play(); // Chỉ phát video tại vị trí hiện tại
-  //       } else {
-  //         video.pause(); // Dừng các video khác
-  //         video.currentTime = 0; // Đặt lại thời gian về 0
-  //       }
-  //     }
-  //   });
-  // }, [currentIndex, videoHeight]);
+    isScrollingRef.current = true;
+    setTimeout(() => (isScrollingRef.current = false), 300); // Reset cờ sau 300ms
+  };
 
-  // // Khởi tạo: Phát video đầu tiên khi load trang
-  // useEffect(() => {
-  //   const video: any = videoRefs.current[0];
-  //   if (video) {
-  //     video.muted = true;
-  //     video.play().catch((error: any) => {
-  //       console.error("Video không thể phát tự động:", error);
-  //     });
-  //   }
-  // }, []);
+  // Cập nhật âm lượng khi người dùng thay đổi
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLVideoElement>) => {
+    const newVolume = e.target.volume;
+    setVolume(newVolume);
+    localStorage.setItem("videoVolume", newVolume.toString()); // Lưu âm lượng
+  };
 
-  // // Phục hồi âm lượng từ localStorage khi trang được tải lại
-  // useEffect(() => {
-  //   const savedVolume = localStorage.getItem("videoVolume");
-  //   if (savedVolume !== null) {
-  //     setVolume(parseFloat(savedVolume));
-  //   }
-  // }, []);
-
-  // useEffect(() => {
-  //   // Khi volume thay đổi, cập nhật tất cả các video
-  //   videoRefs.current.forEach((video: any) => {
-  //     video.volume = volume;
-  //   });
-  // }, [volume]);
+  useEffect(() => {
+    document.title = "Trang chủ";
+  }, []);
 
   return (
     <VStack
@@ -109,48 +133,22 @@ export default function Home() {
       h={"calc(100vh - 110px)"}
       overflow={"hidden"}
       scrollSnapType={"y mandatory"}
-      // ref={containerRef}
-      // onWheel={handleScroll}
+      ref={containerRef}
+      onWheel={handleScroll}
       bgColor={"#111"}
     >
-      {/* <VideoBox
-        handleVolumeChange={handleVolumeChange}
-        videoRefs={videoRefs}
-        index={0}
-        video={1}
-      /> */}
-      {/* <Box h={"calc(100vh - 110px)"} p={"16px"}>
-        <video
-          src="https://res.cloudinary.com/dc4vad8tx/video/upload/v1731006428/video-share/videos/xhrkjavk9hdzitscbcil.mp4"
-          //   src="https://res.cloudinary.com/dc4vad8tx/video/upload/v1731806383/video-share/videos/i0leo1cbluhtj35b2f6q.mp4"
-          controls
-          autoPlay
-          loop
-          muted
-          style={{
-            width: "auto",
-            height: "100%",
-            objectFit: "contain", // Đảm bảo toàn bộ video hiển thị
-            backgroundColor: "black",
-            borderRadius: "8px",
-          }}
-          ref={(el: never) => (videoRefs.current[0] = el)}
-          onVolumeChange={handleVolumeChange}
-        />
-      </Box> */}
-      <video
-        // src={video.url}
-        src="https://res.cloudinary.com/dc4vad8tx/video/upload/v1731006428/video-share/videos/xhrkjavk9hdzitscbcil.mp4"
-        autoPlay
-        muted
-        loop
-        style={{
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
-        }}
-      />
-      <Text>hihihihi</Text>
+      {isLoading ? (
+        <p style={{ color: "white" }}>Đang tải video...</p>
+      ) : (
+        videos.map((video: Video, index) => (
+          <VideoBox
+            key={video.id}
+            video={video}
+            videoRef={(el: any) => (videoRefs.current[index] = el!)} // Gán ref cho từng video
+            handleVolumeChange={handleVolumeChange} // Lắng nghe thay đổi âm lượng
+          />
+        ))
+      )}
     </VStack>
   );
 }

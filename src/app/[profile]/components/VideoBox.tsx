@@ -1,9 +1,17 @@
 import { Box } from "@chakra-ui/react";
 import { Video } from "../page";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
-export default function VideoBox({ video }: { video: Video }) {
+export default function VideoBox({
+  video,
+  username,
+}: {
+  video: Video;
+  username: string;
+}) {
   const [isHovered, setIsHovered] = useState(false);
+  const router = useRouter();
 
   return (
     <Box
@@ -22,6 +30,7 @@ export default function VideoBox({ video }: { video: Video }) {
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onClick={() => router.push(`/${username}/video/${video.id}`)}
     >
       {isHovered ? (
         <video

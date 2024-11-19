@@ -5,7 +5,7 @@ import requestApi from "@/utils/api";
 import { Box, HStack, Spinner, Text, VStack } from "@chakra-ui/react";
 import axios from "axios";
 import { request } from "http";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
 interface UploadVideoForm {
@@ -16,6 +16,9 @@ interface UploadVideoForm {
 }
 
 export default function UploadPage() {
+  useEffect(() => {
+    document.title = "Upload Video";
+  }, []);
   const [loading, setLoading] = useState<boolean>(false);
 
   const {

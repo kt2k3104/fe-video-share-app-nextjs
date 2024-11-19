@@ -74,6 +74,10 @@ export default function ProfilePage({ params }: { params: IParams }) {
     };
     fetchProfile();
   }, []);
+
+  useEffect(() => {
+    document.title = user?.username || "Profile";
+  }, [user]);
   return (
     <Box
       flex={"1"}
@@ -121,7 +125,11 @@ export default function ProfilePage({ params }: { params: IParams }) {
                 }}
               >
                 {user?.videos.map((video, index) => (
-                  <VideoBox video={video} key={index} />
+                  <VideoBox
+                    video={video}
+                    key={index}
+                    username={user.username}
+                  />
                 ))}
               </Grid>
             </Tabs.Content>
