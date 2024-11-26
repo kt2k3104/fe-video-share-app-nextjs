@@ -56,8 +56,8 @@ function Login() {
         password: data.password,
       });
       if (responseData.success) {
-        localStorage.setItem("accessToken", responseData.data.access_token);
-        localStorage.setItem("refreshToken", responseData.data.refresh_token);
+        localStorage.setItem("access_token", responseData.data.access_token);
+        localStorage.setItem("refresh_token", responseData.data.refresh_token);
 
         const { data: usersData } = await requestApi("users/me", "GET", null);
         console.log(usersData.data.user);

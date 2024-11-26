@@ -19,6 +19,7 @@ import {
   MenuTrigger,
 } from "@/components/ui/menu";
 import useUserInfo, { UserInfoState } from "@/hooks/useUserInfo";
+import requestApi from "@/utils/api";
 import {
   Box,
   HStack,
@@ -28,11 +29,10 @@ import {
   Textarea,
   VStack,
 } from "@chakra-ui/react";
-import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { FaComment, FaHeart } from "react-icons/fa";
-import { FaE, FaEllipsis } from "react-icons/fa6";
+import { FaEllipsis } from "react-icons/fa6";
 
 export const formatDate = (createAt: string) => {
   const now: any = new Date();
@@ -41,6 +41,11 @@ export const formatDate = (createAt: string) => {
   const diffInMinutes = Math.floor(diffInMs / 1000 / 60); // Đổi sang phút
   const diffInHours = Math.floor(diffInMinutes / 60); // Đổi sang giờ
   const diffInDays = Math.floor(diffInHours / 24); // Đổi sang ngày
+
+  // Nếu trong vòng 1 phút
+  if (diffInMinutes < 1) {
+    return "Vừa xong";
+  }
 
   // Nếu trong vòng 1 giờ
   if (diffInMinutes < 60) {
@@ -87,15 +92,9 @@ export default function Header({ video }: { video: any }) {
 
   const handleFollow = async () => {
     try {
-      const response: any = await axios.post(
-        `http://localhost:9000/api/v1/users/${video.user.id}/follow`,
-        null,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`, // Thêm Bearer Token
-          },
-        }
-      );
+      const response = await requestApi("users/follow", "POST", {
+        id: video.user.id,
+      });
       if (response.data.message === "Follow user successfully") {
         addFollowings({
           id: video.user.id.toString(),
@@ -117,15 +116,9 @@ export default function Header({ video }: { video: any }) {
 
   const handleUnFollow = async () => {
     try {
-      const response: any = await axios.post(
-        `http://localhost:9000/api/v1/users/${video.user.id}/unfollow`,
-        null,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`, // Thêm Bearer Token
-          },
-        }
-      );
+      const response = await requestApi("users/unfollow", "POST", {
+        id: video.user.id,
+      });
       if (response.data.message === "Unfollow user successfully") {
         removeFollowings(video.user.id.toString());
       }
@@ -224,18 +217,12 @@ export default function Header({ video }: { video: any }) {
                           onClick={() => {
                             const handleUpdateVideoData = async () => {
                               try {
-                                const response: any = await axios.put(
-                                  `http://localhost:9000/api/v1/videos/${video.id}`,
+                                const response: any = await requestApi(
+                                  `videos/${video.id}`,
+                                  "PUT",
                                   {
                                     title,
                                     description,
-                                  },
-                                  {
-                                    headers: {
-                                      Authorization: `Bearer ${localStorage.getItem(
-                                        "accessToken"
-                                      )}`, // Thêm Bearer Token
-                                    },
                                   }
                                 );
                                 if (
@@ -245,16 +232,7 @@ export default function Header({ video }: { video: any }) {
                                   window.location.href = `/${video.user.username}/video/${video.id}`;
                                 }
                               } catch (error: any) {
-                                if (
-                                  error.response.data.error === "Unauthorized"
-                                ) {
-                                  const result = confirm(
-                                    "Bạn cần đăng nhập để thực hiện chức năng này"
-                                  );
-                                  if (result) {
-                                    router.push("/auth/login");
-                                  }
-                                }
+                                console.log(error);
                               }
                             };
                             handleUpdateVideoData();
@@ -272,15 +250,11 @@ export default function Header({ video }: { video: any }) {
                   onClick={() => {
                     const handleDeleteVideo = async () => {
                       try {
-                        const response: any = await axios.delete(
-                          `http://localhost:9000/api/v1/videos/${video.id}`,
+                        const response = await requestApi(
+                          `videos/${video.id}`,
+                          "DELETE",
                           {
-                            headers: {
-                              Authorization: `Bearer ${localStorage.getItem(
-                                "accessToken"
-                              )}`, // Thêm Bearer Token
-                            },
-                            data: { url: video.url },
+                            url: video.url,
                           }
                         );
                         console.log(response);

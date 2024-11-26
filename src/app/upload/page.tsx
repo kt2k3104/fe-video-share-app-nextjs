@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Toaster, toaster } from "@/components/ui/toaster";
 import requestApi from "@/utils/api";
 import { Box, HStack, Spinner, Text, VStack } from "@chakra-ui/react";
-import axios from "axios";
 import { request } from "http";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -47,19 +46,7 @@ export default function UploadPage() {
 
     setLoading(true);
     try {
-      // const response: any = await requestApi("videos", "POST", formData);\
-
-      const token = localStorage.getItem("accessToken");
-      const response: any = await axios.post(
-        "http://localhost:9000/api/v1/videos",
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`, // Thêm Bearer Token
-            "Content-Type": "multipart/form-data", // Định dạng dữ liệu
-          },
-        }
-      );
+      const response = await requestApi("videos", "POST", formData);
       if (response.data.success) {
         toaster.create({
           type: "success",

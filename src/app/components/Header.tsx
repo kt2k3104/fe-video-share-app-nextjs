@@ -8,8 +8,8 @@ import {
   MenuTrigger,
 } from "@/components/ui/menu";
 import useUserInfo, { UserInfoState } from "@/hooks/useUserInfo";
+import requestApi from "@/utils/api";
 import { HStack, Icon, IconButton, Image, Input, Text } from "@chakra-ui/react";
-import axios from "axios";
 import { useRouter } from "next/navigation";
 import { FaBell, FaSearch, FaUpload } from "react-icons/fa";
 
@@ -108,19 +108,9 @@ function Header() {
                 onClick={() => {
                   const handleLogout = async () => {
                     try {
-                      await axios.post(
-                        "http://localhost:9000/api/v1/auth/logout",
-                        {
-                          user_id: myInfo.id,
-                        },
-                        {
-                          headers: {
-                            Authorization: `Bearer ${localStorage.getItem(
-                              "token"
-                            )}`,
-                          },
-                        }
-                      );
+                      await requestApi("auth/logout", "POST", {
+                        user_id: myInfo.id,
+                      });
                       window.location.href = "/";
                       localStorage.removeItem("token");
                       setMyInfo(null);

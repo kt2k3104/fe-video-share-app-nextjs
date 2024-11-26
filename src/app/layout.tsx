@@ -41,7 +41,7 @@ export default function RootLayout({
   useEffect(() => {
     const initLogin = async () => {
       try {
-        const access_token = localStorage.getItem("accessToken");
+        const access_token = localStorage.getItem("access_token");
         if (access_token) {
           const { data: usersData } = await requestApi("users/me", "GET", null);
           setUserInfo({
@@ -67,7 +67,7 @@ export default function RootLayout({
         }
       } catch (error) {
         console.log(error);
-        // localStorage.removeItem("accessToken");
+        // localStorage.removeItem("access_token");
       }
     };
     initLogin();

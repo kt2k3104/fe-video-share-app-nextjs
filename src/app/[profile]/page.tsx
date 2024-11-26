@@ -3,7 +3,6 @@ import requestApi from "@/utils/api";
 import { Box, Grid, Tabs, Text } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import Header from "./components/Header";
-import { useRouter } from "next/navigation";
 import VideoBox from "./components/VideoBox";
 
 export interface IParams {
@@ -49,15 +48,6 @@ interface Following {
 
 export default function ProfilePage({ params }: { params: IParams }) {
   const [user, setUser] = useState<UserProfile>();
-  const router = useRouter();
-
-  // if (user?.avatar_url === null) {
-  //   setUser({
-  //     ...user,
-  //     avatar_url:
-  //       "https://scontent.fhan19-1.fna.fbcdn.net/v/t1.30497-1/453178253_471506465671661_2781666950760530985_n.png?stp=dst-png_s200x200&_nc_cat=1&ccb=1-7&_nc_sid=136b72&_nc_ohc=cZVTekJX4O4Q7kNvgH9tIf2&_nc_zt=24&_nc_ht=scontent.fhan19-1.fna&_nc_gid=AIp-6WWAaxb96Sd5y6M4t60&oh=00_AYAVECT3qcWksSFif9-B8BgbPyvJBS0xzQM_exfZbb0B8w&oe=6760937A",
-  //   });
-  // }
 
   useEffect(() => {
     const fetchProfile = async () => {

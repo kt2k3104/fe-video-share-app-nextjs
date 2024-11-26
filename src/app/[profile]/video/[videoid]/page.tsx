@@ -9,11 +9,12 @@ import {
   Text,
   VStack,
 } from "@chakra-ui/react";
-import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 import Header, { formatDate } from "./components/Header";
 import { Avatar } from "@/components/ui/avatar";
 import { FaRegHeart } from "react-icons/fa";
+import requestApi from "@/utils/api";
+import { useRouter } from "next/navigation";
 
 export interface IParams {
   videoid: string;
@@ -23,12 +24,16 @@ export default function VideoPage({ params }: { params: IParams }) {
   const [video, setVideo] = useState<any>(null);
   const [commentInput, setCommentInput] = useState("");
   const [comments, setComments] = useState<any>([]);
-  console.log(video);
+
+  const router = useRouter();
+
   useEffect(() => {
     const handleGetVideo = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:9000/api/v1/videos/" + params.videoid
+        const response = await requestApi(
+          `videos/${params.videoid}`,
+          "GET",
+          null
         );
         setVideo(response.data.data);
       } catch (error) {
@@ -86,17 +91,10 @@ export default function VideoPage({ params }: { params: IParams }) {
 
   const handleComment = async () => {
     try {
-      const response = await axios.post(
-        `http://localhost:9000/api/v1/comments/${video?.id}`,
-        {
-          content: commentInput,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          },
-        }
-      );
+      console.log("hahaa");
+      const response = await requestApi(`comments/${video.id}`, "POST", {
+        content: commentInput,
+      });
       setComments([response.data.data.comment, ...comments]);
       setVideo({
         ...video,
@@ -104,14 +102,22 @@ export default function VideoPage({ params }: { params: IParams }) {
       });
     } catch (error: any) {
       console.log(error);
+      if (error.response.data.error === "Unauthorized") {
+        const result = confirm("Bạn cần đăng nhập để bình luận");
+        if (result) {
+          router.push("/auth/login");
+        }
+      }
     }
   };
 
   useEffect(() => {
     const handleGetComments = async () => {
       try {
-        const response = await axios.get(
-          `http://localhost:9000/api/v1/comments/${video?.id}?page=1&limit=10`
+        const response = await requestApi(
+          `comments/${video?.id}?page=1&limit=10`,
+          "GET",
+          null
         );
         setComments(response.data.data);
       } catch (error) {

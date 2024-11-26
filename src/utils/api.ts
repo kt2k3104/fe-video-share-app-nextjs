@@ -23,10 +23,9 @@ export default function requestApi(
 
   instance.interceptors.request.use(
     (config) => {
-      const accessToken = localStorage.getItem("accessToken");
-      if (accessToken) {
-        config.headers["Authorization"] = `Bearer ${accessToken}`;
-        // config.headers["x-client-id"] = localStorage.getItem("userId");
+      const access_token = localStorage.getItem("access_token");
+      if (access_token) {
+        config.headers["Authorization"] = `Bearer ${access_token}`;
       }
       return config;
     },
@@ -43,14 +42,14 @@ export default function requestApi(
       const originalConfig = error.config;
       if (error.response && error.response.status === 419) {
         try {
-          const refreshToken = localStorage.getItem("refreshToken");
-          if (!refreshToken) {
+          const refresh_token = localStorage.getItem("refresh_token");
+          if (!refresh_token) {
             throw new Error("Refresh token not found");
           }
           const result = await instance.post(
-            `${BASEURL}auth/refresh`,
+            `${BASEURL}auth/refresh-token`,
             {
-              refreshToken: refreshToken,
+              refresh_token,
             },
             {
               headers: {
@@ -61,12 +60,12 @@ export default function requestApi(
             }
           );
           const {
-            accessToken: new_access_token,
-            refreshToken: new_refresh_token,
-          } = result.data.metadata.token;
+            access_token: new_access_token,
+            refresh_token: new_refresh_token,
+          } = result.data.data;
 
-          localStorage.setItem("accessToken", new_access_token);
-          localStorage.setItem("refreshToken", new_refresh_token);
+          localStorage.setItem("access_token", new_access_token);
+          localStorage.setItem("refresh_token", new_refresh_token);
 
           originalConfig.headers[
             "Authorization"
@@ -74,8 +73,8 @@ export default function requestApi(
 
           return instance(originalConfig);
         } catch (err) {
-          localStorage.removeItem("accessToken");
-          localStorage.removeItem("refreshToken");
+          localStorage.removeItem("access_token");
+          localStorage.removeItem("refresh_token");
           console.log("err", err);
           return Promise.reject(err);
         }

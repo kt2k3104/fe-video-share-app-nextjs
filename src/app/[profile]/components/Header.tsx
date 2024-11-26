@@ -4,10 +4,9 @@ import { Box, HStack, Text } from "@chakra-ui/react";
 import { UserProfile } from "../page";
 import { FaUserCheck } from "react-icons/fa";
 import useUserInfo, { UserInfoState } from "@/hooks/useUserInfo";
-import axios from "axios";
 import { useRouter } from "next/navigation";
 import DialogProfile from "./DialogProfile";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import requestApi from "@/utils/api";
 
 export default function Header({ userParams }: { userParams: UserProfile }) {
@@ -23,21 +22,14 @@ export default function Header({ userParams }: { userParams: UserProfile }) {
   const myVideos = useUserInfo((state: UserInfoState) => state.myVideos);
   const setMyVideos = useUserInfo((state: UserInfoState) => state.setMyVideos);
 
-  const token = localStorage.getItem("accessToken");
-
   const router = useRouter();
 
   const handleFollow = async () => {
     try {
-      const response: any = await axios.post(
-        `http://localhost:9000/api/v1/users/${user.id}/follow`,
-        null,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`, // Thêm Bearer Token
-          },
-        }
-      );
+      const response = await requestApi(`users/follow`, "POST", {
+        id: user.id,
+      });
+
       if (response.data.message === "Follow user successfully") {
         addFollowings({
           id: user.id.toString(),
@@ -59,15 +51,9 @@ export default function Header({ userParams }: { userParams: UserProfile }) {
 
   const handleUnFollow = async () => {
     try {
-      const response: any = await axios.post(
-        `http://localhost:9000/api/v1/users/${user.id}/unfollow`,
-        null,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`, // Thêm Bearer Token
-          },
-        }
-      );
+      const response = await requestApi(`users/unfollow`, "POST", {
+        id: user.id,
+      });
       if (response.data.message === "Unfollow user successfully") {
         removeFollowings(user.id.toString());
       }
@@ -91,23 +77,28 @@ export default function Header({ userParams }: { userParams: UserProfile }) {
     };
   }
 
+  const isProcessing = useRef(false);
+
   useEffect(() => {
     const fetchMyVideos = async () => {
+      if (isProcessing.current) return;
+      isProcessing.current = true;
       try {
-        const response: any = await axios.get(
-          `http://localhost:9000/api/v1/videos/me?page=1&limit=20`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
+        const response = await requestApi(
+          "videos/me?page=1&limit=20",
+          "GET",
+          null
         );
         setMyVideos(response.data.data);
       } catch (error) {
         console.log(error);
+      } finally {
+        isProcessing.current = false;
       }
     };
-    if (myInfo && +myInfo.id === userParams.id) fetchMyVideos();
+    if (myInfo && +myInfo.id === userParams.id) {
+      fetchMyVideos();
+    }
   }, []);
 
   return (

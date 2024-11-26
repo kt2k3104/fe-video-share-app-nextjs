@@ -3,9 +3,9 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { VStack } from "@chakra-ui/react";
-import axios from "axios";
 import VideoBox from "./components/VideoBox";
 import useVideo, { Video, VideoState } from "@/hooks/useVideo";
+import requestApi from "@/utils/api";
 
 export default function Home() {
   const pathname = usePathname(); // Theo dõi route hiện tại
@@ -31,9 +31,7 @@ export default function Home() {
   useEffect(() => {
     const fetchVideos = async () => {
       try {
-        const res = await axios.get(
-          "http://localhost:9000/api/v1/videos?page=1&limit=20"
-        );
+        const res = await requestApi("videos?page=1&limit=20", "GET", null);
         setVideos(res.data.data);
         setIsLoading(false); // Dữ liệu đã sẵn sàng
       } catch (error) {

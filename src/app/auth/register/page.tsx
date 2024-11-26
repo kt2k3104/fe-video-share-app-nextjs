@@ -12,6 +12,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Toaster, toaster } from "@/components/ui/toaster";
+import requestApi from "@/utils/api";
 import {
   Box,
   Button,
@@ -21,7 +22,6 @@ import {
   Text,
   VStack,
 } from "@chakra-ui/react";
-import axios from "axios";
 import { Metadata } from "next";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -65,14 +65,11 @@ function Register() {
       return;
     }
     try {
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}auth/register`,
-        {
-          username: data.username,
-          email: data.email,
-          password: data.password,
-        }
-      );
+      const response = await requestApi("auth/register", "POST", {
+        username: data.username,
+        email: data.email,
+        password: data.password,
+      });
       if (response.data.success) {
         setPassword("");
         setConfirmPassword("");
