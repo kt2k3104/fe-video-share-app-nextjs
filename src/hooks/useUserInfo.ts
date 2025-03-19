@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { Video } from "./useVideo";
 
 export interface UserInfoState {
   userInfo: UserInfo | null;
@@ -71,7 +70,7 @@ const useUserInfo = create<UserInfoState>((set) => ({
     })),
   removeFollowers: (userId: string) =>
     set((state) => ({
-      followers: state.followers.filter((item) => item.id !== userId),
+      followers: state.followers.filter((item) => +item.id !== +userId),
     })),
 
   followings: [],
@@ -82,7 +81,7 @@ const useUserInfo = create<UserInfoState>((set) => ({
     })),
   removeFollowings: (userId: string) =>
     set((state) => ({
-      followings: state.followings.filter((item) => item.id !== userId),
+      followings: state.followings.filter((item) => +item.id !== +userId),
     })),
 
   strangeUsers: [],

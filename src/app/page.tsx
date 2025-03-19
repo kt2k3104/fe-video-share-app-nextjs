@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { VStack } from "@chakra-ui/react";
 import VideoBox from "./components/VideoBox";
@@ -19,6 +19,14 @@ export default function Home() {
   const [volume, setVolume] = useState(1); // Âm lượng lưu trữ
   const isScrollingRef = useRef(false); // Cờ trạng thái cuộn
   const [isLoading, setIsLoading] = useState(true); // Trạng thái chờ dữ liệu từ API
+
+  const searchParams = useSearchParams();
+  const videoIndex = searchParams.get("videoIndex");
+  useEffect(() => {
+    if (videoIndex) {
+      setCurrentIndex(parseInt(videoIndex, 10)); // Đặt lại video hiện tại
+    }
+  }, [videoIndex]);
 
   // Cập nhật chiều cao video khi thay đổi kích thước màn hình
   useEffect(() => {
@@ -55,8 +63,11 @@ export default function Home() {
 
   // Reset trạng thái `currentIndex` khi pathname thay đổi
   useEffect(() => {
-    setCurrentIndex(0); // Mỗi khi route thay đổi, reset về video đầu tiên
-  }, [pathname]);
+    const videoIndex = searchParams.get("videoIndex");
+    if (!videoIndex) {
+      setCurrentIndex(0); // Mặc định về video đầu tiên nếu không có query
+    }
+  }, [pathname, searchParams]);
 
   // Phát video đầu tiên sau khi videos đã được tải
   useEffect(() => {
@@ -104,15 +115,49 @@ export default function Home() {
   const handleScroll = (e: React.WheelEvent) => {
     if (isScrollingRef.current) return; // Ngăn chặn cuộn liên tục
 
-    if (e.deltaY > 0 && currentIndex < videos.length - 1) {
-      setCurrentIndex((prev) => prev + 1); // Cuộn xuống
-    } else if (e.deltaY < 0 && currentIndex > 0) {
-      setCurrentIndex((prev) => prev - 1); // Cuộn lên
+    // if (e.deltaY > 0 && currentIndex < videos.length - 1) {
+    //   setCurrentIndex((prev) => prev + 1); // Cuộn xuống
+    // } else if (e.deltaY < 0 && currentIndex > 0) {
+    //   setCurrentIndex((prev) => prev - 1); // Cuộn lên
+    // }
+    let deltaY = e.deltaY;
+    if (e.deltaMode === 1) deltaY *= 15;
+
+    if (deltaY > 50 && currentIndex < videos.length - 1) {
+      setCurrentIndex((prev) => prev + 1);
+    } else if (deltaY < -50 && currentIndex > 0) {
+      setCurrentIndex((prev) => prev - 1);
     }
 
     isScrollingRef.current = true;
     setTimeout(() => (isScrollingRef.current = false), 300); // Reset cờ sau 300ms
   };
+
+  // Xử lý sự kien phím để thay đổi video
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "ArrowDown" && currentIndex < videos.length - 1) {
+        setCurrentIndex((prev) => prev + 1); // Lướt xuống
+      } else if (e.key === "ArrowUp" && currentIndex > 0) {
+        setCurrentIndex((prev) => prev - 1); // Lướt lên
+      } else if (e.key === " ") {
+        e.preventDefault(); // Ngăn cuộn trang khi nhấn Space
+        const currentVideo = videoRefs.current[currentIndex];
+        if (currentVideo) {
+          if (currentVideo.paused) {
+            currentVideo.play();
+          } else {
+            currentVideo.pause();
+          }
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [currentIndex, videos]);
 
   // Cập nhật âm lượng khi người dùng thay đổi
   const handleVolumeChange = (e: React.ChangeEvent<HTMLVideoElement>) => {
@@ -144,6 +189,7 @@ export default function Home() {
             video={video}
             videoRef={(el: any) => (videoRefs.current[index] = el!)} // Gán ref cho từng video
             handleVolumeChange={handleVolumeChange} // Lắng nghe thay đổi âm lượng
+            currentIndex={currentIndex} // Vị trí video hiện tại
           />
         ))
       )}

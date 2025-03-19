@@ -4,6 +4,7 @@ import {
   Box,
   Button,
   HStack,
+  IconButton,
   Input,
   Tabs,
   Text,
@@ -14,7 +15,8 @@ import Header, { formatDate } from "./components/Header";
 import { Avatar } from "@/components/ui/avatar";
 import { FaRegHeart } from "react-icons/fa";
 import requestApi from "@/utils/api";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { IoClose } from "react-icons/io5";
 
 export interface IParams {
   videoid: string;
@@ -26,6 +28,8 @@ export default function VideoPage({ params }: { params: IParams }) {
   const [comments, setComments] = useState<any>([]);
 
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const videoIndex = searchParams.get("videoIndex");
 
   useEffect(() => {
     const handleGetVideo = async () => {
@@ -36,6 +40,7 @@ export default function VideoPage({ params }: { params: IParams }) {
           null
         );
         setVideo(response.data.data);
+        setComments(response.data.data.comments);
       } catch (error) {
         console.log(error);
       }
@@ -111,22 +116,6 @@ export default function VideoPage({ params }: { params: IParams }) {
     }
   };
 
-  useEffect(() => {
-    const handleGetComments = async () => {
-      try {
-        const response = await requestApi(
-          `comments/${video?.id}?page=1&limit=10`,
-          "GET",
-          null
-        );
-        setComments(response.data.data);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    handleGetComments();
-  }, [video]);
-
   return (
     <HStack
       flex={"1"}
@@ -188,6 +177,24 @@ export default function VideoPage({ params }: { params: IParams }) {
             zIndex: 0, // Nền bên dưới
           }}
         />
+        <IconButton
+          position="absolute"
+          top="10px"
+          left="10px"
+          maxW={"40px"}
+          maxH={"40px"}
+          w="40px"
+          h="40px"
+          borderRadius="50%"
+          zIndex="99"
+          p={"0"}
+          variant="surface"
+          onClick={() => {
+            router.push(videoIndex ? `/?videoIndex=${videoIndex}` : "/");
+          }}
+        >
+          <IoClose />
+        </IconButton>
       </Box>
       <Box w={"500px"} h={"100%"}>
         <Box
@@ -230,17 +237,17 @@ export default function VideoPage({ params }: { params: IParams }) {
                     justifyContent={"space-between"}
                   >
                     <HStack>
-                      <Avatar src={comment.user.avatar_url} />
+                      <Avatar src={comment?.user?.avatar_url} />
                       <Box>
                         <Text color={"#ffffffe6"} fontSize={"14px"}>
-                          {comment.user.full_name}
+                          {comment?.user?.full_name}
                         </Text>
                         <Text color={"#ffffffe6"} fontSize={"16px"}>
-                          {comment.content}
+                          {comment?.content}
                         </Text>
                         <HStack>
                           <Text color={"#c4c4c4"} fontSize={"12px"}>
-                            {formatDate(comment.created_at)}
+                            {formatDate(comment?.created_at)}
                           </Text>
                           <Text
                             color={"#c4c4c4"}
@@ -255,7 +262,7 @@ export default function VideoPage({ params }: { params: IParams }) {
                     </HStack>
                     <VStack alignItems={"center"} gap={"0"}>
                       <FaRegHeart cursor="pointer" />
-                      <Text color={"#c4c4c4"}>{comment.likes_count}</Text>
+                      <Text color={"#c4c4c4"}>{comment?.likes_count}</Text>
                     </VStack>
                   </HStack>
                 ))}

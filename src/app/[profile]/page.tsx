@@ -63,7 +63,7 @@ export default function ProfilePage({ params }: { params: IParams }) {
       }
     };
     fetchProfile();
-  }, []);
+  }, [params.profile]);
 
   useEffect(() => {
     document.title = user?.username || "Profile";

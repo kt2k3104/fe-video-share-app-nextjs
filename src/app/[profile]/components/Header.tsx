@@ -8,6 +8,18 @@ import { useRouter } from "next/navigation";
 import DialogProfile from "./DialogProfile";
 import { useEffect, useRef } from "react";
 import requestApi from "@/utils/api";
+import {
+  DialogActionTrigger,
+  DialogBody,
+  DialogCloseTrigger,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogRoot,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import Link from "next/link";
 
 export default function Header({ userParams }: { userParams: UserProfile }) {
   const myInfo = useUserInfo((state: UserInfoState) => state.userInfo);
@@ -21,6 +33,16 @@ export default function Header({ userParams }: { userParams: UserProfile }) {
   );
   const myVideos = useUserInfo((state: UserInfoState) => state.myVideos);
   const setMyVideos = useUserInfo((state: UserInfoState) => state.setMyVideos);
+
+  let user: any = userParams;
+  if (myInfo && +myInfo.id === userParams.id) {
+    user = {
+      ...myInfo,
+      videos: myVideos,
+      followers: myFollowers,
+      followings: myFollowings,
+    };
+  }
 
   const router = useRouter();
 
@@ -40,6 +62,7 @@ export default function Header({ userParams }: { userParams: UserProfile }) {
         });
       }
     } catch (error: any) {
+      console.log(error);
       if (error.response.data.error === "Unauthorized") {
         const result = confirm("Bạn cần đăng nhập để thực hiện chức năng này");
         if (result) {
@@ -58,6 +81,7 @@ export default function Header({ userParams }: { userParams: UserProfile }) {
         removeFollowings(user.id.toString());
       }
     } catch (error: any) {
+      console.log(error);
       if (error.response.data.error === "Unauthorized") {
         const result = confirm("Bạn cần đăng nhập để thực hiện chức năng này");
         if (result) {
@@ -66,16 +90,6 @@ export default function Header({ userParams }: { userParams: UserProfile }) {
       }
     }
   };
-
-  let user: any = userParams;
-  if (myInfo && +myInfo.id === userParams.id) {
-    user = {
-      ...myInfo,
-      videos: myVideos,
-      followers: myFollowers,
-      followings: myFollowings,
-    };
-  }
 
   const isProcessing = useRef(false);
 
@@ -157,12 +171,149 @@ export default function Header({ userParams }: { userParams: UserProfile }) {
           </Button>
         )}
         <HStack mt={"10px"} gap={"15px"}>
-          <Text cursor={"pointer"} _hover={{ textDecoration: "underline" }}>
-            {user.followings.length} Đang Follow
-          </Text>
-          <Text cursor={"pointer"} _hover={{ textDecoration: "underline" }}>
-            {user.followers.length} Follower
-          </Text>
+          <DialogRoot placement="center" motionPreset="slide-in-bottom">
+            <DialogTrigger asChild>
+              <Text cursor={"pointer"} _hover={{ textDecoration: "underline" }}>
+                {user.followings.length} Đang Follow
+              </Text>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Đang Follow</DialogTitle>
+              </DialogHeader>
+              <DialogBody
+                maxH={"500px"}
+                overflow={"auto"}
+                css={{
+                  "&:hover": {
+                    overflowY: "auto", // Hiện thanh cuộn khi hover
+                  },
+                  "&::-webkit-scrollbar": {
+                    width: "5px", // Kích thước scrollbar
+                  },
+                  scrollbarGutter: "stable",
+                  "&::-webkit-scrollbar-thumb": {
+                    background: "#222",
+                    borderRadius: "24px",
+                  },
+                  "&::-webkit-scrollbar-track": {
+                    background: "transparent",
+                  },
+                }}
+              >
+                {user.followings.length === 0 && <Text>Không follow ai</Text>}
+                {user.followings.length > 0 &&
+                  user.followings.map((item: any) => (
+                    <Link key={item.id} href={`/${item.username}`}>
+                      <HStack
+                        gap={"12px"}
+                        mt={"10px"}
+                        cursor="pointer"
+                        p={"8px"}
+                      >
+                        <Avatar
+                          src={item.avatar_url}
+                          maxW={"50px"}
+                          maxH={"50px"}
+                          w={"50px"}
+                          h={"50px"}
+                        />
+                        <Box>
+                          <Text
+                            fontSize={"18px"}
+                            fontWeight={"700"}
+                            lineHeight={"24px"}
+                          >
+                            {item.full_name}
+                          </Text>
+                          <Text
+                            color={"rgba(255, 255, 255, 0.5)"}
+                            fontSize={"14px"}
+                            lineHeight={"18px"}
+                          >
+                            {item.username.split("@")[1]}
+                          </Text>
+                        </Box>
+                      </HStack>
+                    </Link>
+                  ))}
+              </DialogBody>
+              <DialogCloseTrigger />
+            </DialogContent>
+          </DialogRoot>
+          <DialogRoot placement="center" motionPreset="slide-in-bottom">
+            <DialogTrigger asChild>
+              <Text cursor={"pointer"} _hover={{ textDecoration: "underline" }}>
+                {user.followers.length === 0
+                  ? "0 Follower"
+                  : `${user.followers.length} Followers`}
+              </Text>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Followers</DialogTitle>
+              </DialogHeader>
+              <DialogBody
+                maxH={"500px"}
+                overflow={"auto"}
+                css={{
+                  "&:hover": {
+                    overflowY: "auto", // Hiện thanh cuộn khi hover
+                  },
+                  "&::-webkit-scrollbar": {
+                    width: "5px", // Kích thước scrollbar
+                  },
+                  scrollbarGutter: "stable",
+                  "&::-webkit-scrollbar-thumb": {
+                    background: "#222",
+                    borderRadius: "24px",
+                  },
+                  "&::-webkit-scrollbar-track": {
+                    background: "transparent",
+                  },
+                }}
+              >
+                {user.followers.length === 0 && <Text>Không có ai follow</Text>}
+                {user.followers.length > 0 &&
+                  user.followers.map((item: any) => (
+                    <Link key={item.id} href={`/${item.username}`}>
+                      <HStack
+                        gap={"12px"}
+                        mt={"10px"}
+                        cursor="pointer"
+                        p={"8px"}
+                      >
+                        <Avatar
+                          src={item.avatar_url}
+                          maxW={"50px"}
+                          maxH={"50px"}
+                          w={"50px"}
+                          h={"50px"}
+                        />
+                        <Box>
+                          <Text
+                            fontSize={"18px"}
+                            fontWeight={"700"}
+                            lineHeight={"24px"}
+                          >
+                            {item.full_name}
+                          </Text>
+                          <Text
+                            color={"rgba(255, 255, 255, 0.5)"}
+                            fontSize={"14px"}
+                            lineHeight={"18px"}
+                          >
+                            {item.username.split("@")[1]}
+                          </Text>
+                        </Box>
+                      </HStack>
+                    </Link>
+                  ))}
+              </DialogBody>
+              <DialogCloseTrigger />
+            </DialogContent>
+          </DialogRoot>
+
           <Text userSelect={"none"}>
             {user.videos.reduce(
               (total: any, video: any) => total + video.likes_count,
